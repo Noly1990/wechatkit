@@ -4,7 +4,9 @@
  *appId  appSecret
  *
  */
-class WxKits {
+const axios = require('axios');
+
+class WechatKit {
   constructor(options) {
     const {
       appId,
@@ -30,17 +32,16 @@ class WxKits {
     // 缓存 access_token
     this.gh_access_token = '';
     this.gh_access_token_time = undefined;
+    this.signType = 'MD5';
+    this.init()
   }
-
+  init(){
+    console.log('kit begin to init')
+    
+    console.log('kit init successed')
+  }
   // 随机字符串生成函数
-  createNonceStr() {
-    const randomStr = Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2);
-    return randomStr;
-  }
-  // 随机时间戳生成函数
-  createTimestamp() {
-    return parseInt(new Date().getTime() / 1000) + '';
-  }
+
 }
 
-module.exports = WxKits;
+module.exports = WechatKit;

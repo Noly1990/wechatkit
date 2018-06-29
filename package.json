@@ -1,7 +1,7 @@
 {
-  "name": "wechatkit",
+  "name": "@noly1990/wechatkit",
   "version": "0.1.0",
-  "description": "a kit for wechat",
+  "description": "the kit for wechat",
   "main": "index.js",
   "directories": {
     "lib": "lib",
