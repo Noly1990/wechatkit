@@ -28,11 +28,15 @@
 
 - [微信支付文档](https://pay.weixin.qq.com/wiki/doc/api/index.html)
 - [签名校验工具](https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=20_1)
+- [接收普通消息](https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140453)
 
 ## Installation
 
 (功能还未可用，马上跟进开发，看到的请不要使用谢谢)npm上已经有一个co-wechat-api看了下还不错，但决定还是自己造个轮子，会逐步写下自己的思考过程和开发过程，放心不会偷看抄袭的，我就是自己写着玩，不求其他
 
+## 使用方法
+
+每一个独立的appid，通过class wechatKit创建一个实例，把它挂载在全局app下，之后都使用之前创建的实例，除非需要对接额外的appid
 
 ## 开发思路
 
@@ -42,7 +46,12 @@
 
 微信相关的开发比较麻烦的点就在签名校验，主要实现通用的签名算法， 初步先实现MD5版本的加密签名，后续再跟进sha256的
 
+公众号的自动回复我觉得有两个实现方式，一种就是用微信提供的接口去设置自动回复，第二种就是自己在后台维护一份自动回复的配置
+
 ## 实现列表
 
 - 统一下单API => https://api.mch.weixin.qq.com/pay/unifiedorder
 - JSsdk签名API
+- 一个初始的设置微信服务器的Get接收签名校验件（简化配置）=>已完成
+- 一个用户转换微信POST到本服务器的xml消息和事件的中间件 =>已完成
+- 一个用于生成给用户发送消息xml的功能件 =>完成文本图片声音的生成和发送
