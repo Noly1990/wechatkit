@@ -6,7 +6,9 @@
  */
 const axios = require('axios');
 
-const { sighOrder, signWXPay } = require('./lib/wxSign');
+const { normalSigh, signWXPay, signAppPay } = require('./lib/wxSign');
+
+const { xml2obj } = require('./lib/xmlTools');
 
 // 默认接入点
 const apiUrlDefault = 'api.weixin.qq.com';
@@ -30,6 +32,7 @@ class WechatKit {
     this.appId = appId;
     this.appSecret = appSecret;
     this.token = token;
+    this.isMch = isMch;
     if (isMch) {
       const {
         mchId,
@@ -40,11 +43,6 @@ class WechatKit {
       this.mchId = mchId;
       this.mchKey = mchKey;
       this.notifyUrl = notifyUrl;
-      // isMch 是否包含支付功能
-      this.isMch = true;
-    } else {
-      // isMch 不包含支付功能
-      this.isMch = false;
     }
     if (options.area) {
       switch (options.area) {
@@ -253,37 +251,66 @@ class WechatKit {
       sign_type: 'MD5',
     };
     const newObj = Object.assign(orderInfos, serverInfos);
-    const signedXML = sighOrder(newObj, this.mchKey);
+    const signedXML = normalSigh(newObj, this.mchKey);
     const prepayRes = await axios.post(aimUrl, signedXML).catch(err => {
       console.error('createUnifiedOrder error', err);
     });
+    const returnXML = prepayRes.data;
+    const returnObj = xml2obj(returnXML).xml;
+    console.log('returnObj', returnObj);
     const returnInfo = {};
-
     switch (orderInfos.trade_type) {
       case 'JSAPI':
-        returnInfo.prepay_id = prepayRes.data.prepay_id;
+        returnInfo.prepay_id = returnObj.prepay_id;
         break;
       case 'APP':
-        returnInfo.prepay_id = prepayRes.data.prepay_id;
+        returnInfo.prepay_id = returnObj.prepay_id;
         break;
       case 'MWEB':
-        returnInfo.prepay_id = prepayRes.data.prepay_id;
+        returnInfo.prepay_id = returnObj.prepay_id;
         break;
       case 'NATIVE':
-        returnInfo.prepay_id = prepayRes.data.prepay_id;
-        returnInfo.code_url = prepayRes.data.code_url;
+        returnInfo.prepay_id = returnObj.prepay_id;
+        returnInfo.code_url = returnObj.code_url;
         break;
       default:
-        returnInfo.prepay_id = prepayRes.data.prepay_id;
+        returnInfo.prepay_id = returnObj.prepay_id;
         break;
     }
 
     return returnInfo;
   }
 
+  /**
+   *创建拉起公众号支付chooseWXPay所需参数的方法
+   * @param {object} orderInfos 支付信息对象
+   * @return {object} 拉起jssdk的微信支付所需要的参数
+   */
   async createClientWXPayInfos(orderInfos) {
     const prepay_id = await this.createUnifiedOrder(orderInfos).prepay_id;
     return signWXPay(prepay_id, this.appId, this.mchKey);
+  }
+
+  /**
+   *创建拉起移动APP微信支付所需参数的方法
+   * @param {object} orderInfos 支付信息对象
+   * @return {object} 拉起移动APP的微信支付所需要的参数
+   */
+  async createAppWXPayInfos(orderInfos) {
+    const prepay_id = await this.createUnifiedOrder(orderInfos).prepay_id;
+    return signAppPay(prepay_id, this.appId, this.mchId, this.mchKey);
+  }
+
+  async checkWXPayment(transaction_id) {
+    const aimUrl = 'https://api.mch.weixin.qq.com/pay/orderquery';
+    const signInfos = {
+      appid: this.appId,
+      mch_id: this.mchId,
+      transaction_id,
+    };
+    const signedXML = normalSigh(signInfos, this.mchKey);
+    const checkRes = await axios.post(aimUrl, signedXML);
+    return checkRes.data;
   }
 }
 
