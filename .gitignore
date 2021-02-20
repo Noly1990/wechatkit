@@ -26,6 +26,7 @@ node_modules/
 jspm_packages/
 # Typescript v1 declaration files
 typings/
+src/
 # Optional npm cache directory
 .npm
 # Optional eslint cache
